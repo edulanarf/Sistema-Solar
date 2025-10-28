@@ -1,72 +1,34 @@
----
-title: "🌌 Sistema Solar en Three.js"
-output: github_document
----
+# Sistema Solar en Three.js
 
-# 🌞 Sistema Solar en Three.js
-
-Este proyecto simula el **Sistema Solar en 3D** utilizando **Three.js**, con texturas realistas, rotaciones, órbitas elípticas, lunas y anillos.  
-Incluye un panel interactivo (**dat.GUI**) para seleccionar el planeta que se desea seguir y un modo **"Libre"** para moverse manualmente por la escena como si fuera una nave.
+Este proyecto simula el **Sistema Solar en 3D** utilizando **Three.js**, con texturas, rotaciones, órbitas elípticas, lunas, anillos y un fondo que intenta representar las estrellas del universo.  
+Incluye un panel interactivo (**dat.GUI**) para seleccionar el planeta que se desea seguir
 
 ---
 
-## 📚 Índice
+## Índice
 
-1. [Características principales](#características-principales)  
-2. [Tecnologías utilizadas](#tecnologías-utilizadas)  
-3. [Estructura del proyecto](#estructura-del-proyecto)  
-4. [Inicialización y configuración](#inicialización-y-configuración)  
-5. [Datos de los planetas](#datos-de-los-planetas)  
-6. [Funciones principales](#funciones-principales)  
-7. [Control de cámara y selección de planeta](#control-de-cámara-y-selección-de-planeta)  
-8. [Eventos y animación](#eventos-y-animación)  
-9. [Parámetros importantes](#parámetros-importantes)  
-10. [Cómo ejecutar el proyecto](#cómo-ejecutar-el-proyecto)  
-11. [Mejoras futuras](#mejoras-futuras)
+1. [Características principales](#características-principales)   
+2. [Inicialización y configuración](#inicialización)  
+3. [Datos de los planetas](#datos-de-los-planetas)  
+4. [Funciones principales](#funciones-principales)  
+5. [Eventos y animación](#eventos-y-animación)
+6. [Imagenes y video](#imagenes-y-video) 
 
 ---
 
-## 🌠 Características principales
+## Características principales
 
 - Representación completa del **Sistema Solar** con órbitas elípticas e inclinaciones realistas.  
 - **Texturas HD** de planetas, lunas y fondo estelar (vía NASA).  
 - **Rotación** de planetas y lunas en tiempo real.  
 - **Luz puntual (Sol)** y **luz ambiental** para simular la iluminación natural.  
-- **Cámara interactiva** con `OrbitControls` y opción de modo **Libre/Nave**.  
+- **Cámara interactiva** con `OrbitControls` pudiendo seleccionar diferentes planetas.  
 - **Panel de control (dat.GUI)** para elegir qué planeta seguir.  
-- **Fondo de estrellas 3D** con esfera invertida tipo “Milky Way”.
+- **Fondo de estrellas** creado con una esfera y añadiendole el material con una foto 8k.
 
 ---
 
-## 🧰 Tecnologías utilizadas
-
-| Tecnología | Descripción |
-|-------------|-------------|
-| **Three.js** | Motor 3D basado en WebGL |
-| **dat.GUI** | Panel de control para manipular parámetros |
-| **OrbitControls** | Control de cámara con ratón (rotar, acercar, orbitar) |
-| **JavaScript (ES6)** | Lógica principal del sistema y animaciones |
-| **Texturas NASA 2K/8K** | Mapas realistas de planetas y fondo estelar |
-
----
-
-## 🗂️ Estructura del proyecto
-
-```bash
-├── index.html
-├── main.js                 # Lógica principal con Three.js
-├── textures/               # Carpeta de texturas
-│   ├── 2k_earth_daymap.jpg
-│   ├── 2k_mars.jpg
-│   ├── 8k_stars_milky_way.jpg
-│   ├── saturn_ring.png
-│   └── ...
-└── README.Rmd
-```
-
----
-
-## ⚙️ Inicialización y configuración
+## Inicialización
 
 La función principal `init()`:
 
@@ -75,11 +37,11 @@ La función principal `init()`:
 - Inicializa los **controles de cámara (`OrbitControls`)**.  
 - Añade el **fondo estelar** (textura de la Vía Láctea).  
 - Genera planetas y lunas a partir del arreglo `planetsData`.  
-- Configura el menú `dat.GUI` para seleccionar el planeta o modo libre.
+- Configura el menú `dat.GUI` para seleccionar el planeta.
 
 ---
 
-## 🪐 Datos de los planetas
+## Datos de los planetas
 
 Cada planeta se define dentro del arreglo `planetsData` con las siguientes propiedades:
 
@@ -91,9 +53,9 @@ Cada planeta se define dentro del arreglo `planetsData` con las siguientes propi
 | `vel` | Velocidad angular |
 | `col` | Color base |
 | `inclinacionX`, `inclinacionZ` | Inclinación orbital |
-| `f1`, `f2` | Factores de elipticidad |
+| `f1`, `f2` | Elipticidad |
 | `texture` | Textura del planeta |
-| `lunas` | Arreglo de lunas (opcional) |
+| `lunas` | Array de lunas (puede no tener lunas) |
 
 Ejemplo:
 
@@ -117,66 +79,81 @@ Ejemplo:
 
 ---
 
-## 🧮 Funciones principales
+## Funciones principales
 
-### `Planeta(nombre, radio, color, textura, ... )`
-Crea la geometría y malla del planeta, aplica textura, color y añade lunas o anillos (en el caso de Saturno).
+### `init()`
+Inicializa toda la escena 3D.  
+Se encarga de crear la cámara, el renderizador y las luces, configurar los controles (`OrbitControls`), generar los planetas y añadir el fondo estelar.  
+También crea la interfaz gráfica con **dat.GUI**, permitiendo seleccionar el planeta a seguir.
 
-### `crearOrbitas(...)`
-Dibuja la trayectoria de cada planeta como una línea delgada para representar la órbita.
+### `Estrella(radio, color, textura)`
+Crea el Sol como una esfera con material básico y una textura.  
+El Sol actúa además como fuente de luz principal mediante una luz puntual colocado en el mismo punto.
+A parte de la luz puntual, se ha añadido una luz ambiente para que los planetas no se vean totalmente oscuros por la parte contraria del sol. En 
+la vida real, esta luz podría darse por la luz de otras estrellas por ejemplo.
+
+### `Planeta(nombre, radio, dist, vel, col, f1, f2, inclinacionX, inclinacionZ, lunas, textura, texturaAnilloSaturno)`
+Genera un planeta con sus parámetros físicos y orbitales.  
+- Crea la geometría esférica del planeta y le aplica el color o textura correspondiente.  
+- Calcula su órbita en base a los factores de elipticidad (`f1`, `f2`) e inclinaciones (`inclinacionX`, `inclinacionZ`).  
+- Dibuja su órbita como una línea en la escena.  
+- Si el planeta es **Saturno**, añade su anillo.  
+- Si el planeta posee **lunas**, las crea y las vincula como hijas del planeta, de modo que orbiten junto a él.
 
 ### `animationLoop()`
-Actualiza posiciones, rotaciones y cámara en cada frame del renderizado.
+Controla el bucle de animación principal mediante `requestAnimationFrame()`.  
+En cada fotograma:
+- Actualiza las posiciones de los planetas según su velocidad angular.  
+- Calcula la rotación propia de cada planeta para simular su giro sobre el eje.  
+- Actualiza la posición de las lunas alrededor de su planeta.  
+- Reposiciona la cámara si se está siguiendo un planeta.  
+- Llama al renderizador para dibujar la escena.  
+
+### `onWindowResize()`
+Tiene en cuenta los cambios de tamaño de ventana y actualiza automáticamente la relación de aspecto de la cámara y el tamaño del `renderer`.  
+Esto garantiza que la escena se mantenga correctamente proporcionada en cualquier resolución o dispositivo o también en caso de hacer la ventana
+mas pequeña o mas grande.
+
+### `crearOrbitas(dist, f1, f2, inclinacionX, inclinacionZ)`
+Dibuja la trayectoria orbital del planeta alrededor del Sol.  
+Usa una `THREE.EllipseCurve` para generar una órbita elíptica y aplica rotaciones según los ángulos de inclinación.  
+La órbita se añade a la escena como una `THREE.LineLoop` gris que sirve como referencia visual.
+
+### `seguimientoPlaneta()`
+Permite que la cámara siga automáticamente al planeta seleccionado en el panel `dat.GUI`.  
+Calcula el desplazamiento del planeta entre fotogramas y aplica ese movimiento tanto a la posición de la cámara como al punto de enfoque.  
+Esto crea un efecto de seguimiento suave y dinámico.
+
+
 
 ---
 
-## 🎥 Control de cámara y selección de planeta
+- **OrbitControls** permite rotar, desplazar y hacer zoom con el ratón para explorar la escena libremente.  
+- El panel `dat.GUI` incluye una lista desplegable con todos los planetas y el Sol.  
+  - Al seleccionar un planeta, la cámara se centra y sigue automáticamente su movimiento.  
+  - El seguimiento de planeta se logra calculando el desplazamiento entre frames y aplicándolo a la posición de la cámara y al objetivo de los controles.
+  - 
+---
 
-- **OrbitControls** permite rotar y hacer zoom con el ratón.  
-- El panel `dat.GUI` incluye una lista con todos los planetas y una opción **"Libre"**.  
-- En modo **Libre**, se puede mover con:
-  - `W` / `S`: Avanzar / Retroceder  
-  - `A` / `D`: Izquierda / Derecha  
-  - `Q` / `E`: Subir / Bajar  
+## Eventos y animación
+
+- Los planetas giran alrededor del Sol usando sus parámetros de velocidad (`speed`) y distancia (`dist`).  
+  - La posición se calcula con trigonometría:  
+    ```text
+    x = cos(angulo) * f1 * dist
+    y = sin(angulo) * f2 * dist
+    ```
+    donde `f1` y `f2` deforman la órbita para hacerla elíptica y `angulo = tiempo * velocidad`.
+  - Luego se aplican rotaciones en los ejes X y Z según la inclinación de la órbita:
+    ```text
+    vector.applyAxisAngle(ejeX, inclinacionX)
+    vector.applyAxisAngle(ejeZ, inclinacionZ)
+    ```
+- Las lunas se posicionan respecto al planeta padre, usando un cálculo similar para su órbita pero con `angleOffset` para variar el inicio del movimiento (evitando que colapse con otra luna).  
+- El renderizado se actualiza continuamente mediante `requestAnimationFrame(animationLoop)`, recalculando posiciones y rotaciones de todos los planetas en cada frame.  
 
 ---
 
-## 🕹️ Eventos y animación
+## Imagenes y video
 
-- Los planetas giran en torno al Sol usando sus parámetros de velocidad.  
-- Las lunas orbitan sus planetas correspondientes.  
-- El renderizado se actualiza continuamente con `renderer.setAnimationLoop(animationLoop)` para garantizar fluidez.
 
----
-
-## ⚙️ Parámetros importantes
-
-| Variable | Función |
-|-----------|----------|
-| `acelglobal` | Factor global de velocidad del sistema |
-| `movimientoLibre` | Activa/desactiva el modo nave |
-| `teclasPresionadas` | Mapa de teclas activas para movimiento libre |
-| `velocidadCamara` | Controla la velocidad de desplazamiento en modo libre |
-
----
-
-## 🚀 Cómo ejecutar el proyecto
-
-1. Instala un servidor local (por ejemplo con `Live Server` en VSCode).  
-2. Coloca todos los archivos (`index.html`, `main.js`, `textures/`) en el mismo directorio.  
-3. Abre `index.html` con el servidor local.  
-4. Explora el sistema solar y utiliza el panel `dat.GUI` para seleccionar planetas o entrar en modo **Libre**.
-
----
-
-## 💡 Mejoras futuras
-
-- Implementar **shader de atmósfera** para planetas gaseosos.  
-- Añadir **trayectorias de lunas y cometas**.  
-- Soporte para **post-procesado** (bloom, lens flare).  
-- Mejorar el **modo nave** con controles de rotación de cámara.  
-- Agregar **HUD con información científica** (nombre, tamaño, distancia, etc.).
-
----
-
-© 2025 — Proyecto educativo en **Three.js** desarrollado para visualización interactiva del Sistema Solar.
