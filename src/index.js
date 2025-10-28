@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls.js";
 import * as dat from "dat.gui";
 
 let scene, renderer, camera, controls;
@@ -8,6 +9,7 @@ let estrella,
 let t0 = 0;
 let accglobal = 0.0008;
 let timestamp;
+const gui = new dat.GUI();
 
 const texturaTierra = new THREE.TextureLoader().load(
   "textures/2k_earth_daymap.jpg"
@@ -49,7 +51,7 @@ const texturaAnilloSaturno = new THREE.TextureLoader().load(
 const planetsData = [
   {
     nombre: "Mercurio",
-    r: 0.2,
+    r: 1,
     dist: 40.0,
     vel: 0.4,
     col: 0xffffff,
@@ -61,7 +63,7 @@ const planetsData = [
   },
   {
     nombre: "Venus",
-    r: 0.4,
+    r: 2,
     dist: 60.0,
     vel: 0.3,
     col: 0xffffff,
@@ -73,7 +75,7 @@ const planetsData = [
   },
   {
     nombre: "Tierra",
-    r: 0.45,
+    r: 2.4,
     dist: 80.0,
     vel: 0.2,
     col: 0xffffff,
@@ -84,7 +86,7 @@ const planetsData = [
     lunas: [
       {
         nombre: "Luna",
-        r: 0.12,
+        r: 0.6,
         inclinacionX: 0.05,
         inclinacionZ: 0.1,
         angleOffset: Math.PI / 2, //Añado un angulo para especificar desde donde empieza a girar
@@ -98,7 +100,7 @@ const planetsData = [
   },
   {
     nombre: "Marte",
-    r: 0.35,
+    r: 1.75,
     dist: 100.0,
     vel: 0.15,
     col: 0xff3300,
@@ -110,7 +112,7 @@ const planetsData = [
   },
   {
     nombre: "Jupiter",
-    r: 1.0,
+    r: 5.0,
     dist: 140.0,
     vel: 0.1,
     col: 0xffffff,
@@ -121,8 +123,8 @@ const planetsData = [
     lunas: [
       {
         nombre: "Io",
-        r: 0.18,
-        dist: 2.0,
+        r: 1,
+        dist: 6.2,
         vel: 1.8,
         col: 0xffffff,
         angleOffset: 0,
@@ -132,8 +134,8 @@ const planetsData = [
       },
       {
         nombre: "Europa",
-        r: 0.15,
-        dist: 2.8,
+        r: 0.9,
+        dist: 7.5,
         vel: 1.5,
         col: 0xffffff,
         angleOffset: Math.PI / 2,
@@ -143,8 +145,8 @@ const planetsData = [
       },
       {
         nombre: "Ganimedes",
-        r: 0.22,
-        dist: 3.8,
+        r: 1.1,
+        dist: 9,
         vel: 1.2,
         col: 0xffffff,
         angleOffset: Math.PI,
@@ -154,8 +156,8 @@ const planetsData = [
       },
       {
         nombre: "Calisto",
-        r: 0.2,
-        dist: 4.6,
+        r: 1,
+        dist: 11,
         vel: 1.0,
         col: 0xffffff,
         angleOffset: (3 * Math.PI) / 2,
@@ -168,7 +170,7 @@ const planetsData = [
   },
   {
     nombre: "Saturno",
-    r: 0.8,
+    r: 4.6,
     dist: 180.0,
     vel: 0.075,
     col: 0xffffff,
@@ -180,7 +182,7 @@ const planetsData = [
   },
   {
     nombre: "Urano",
-    r: 0.6,
+    r: 2.8,
     dist: 220.0,
     vel: 0.06,
     col: 0xffffff,
@@ -192,7 +194,7 @@ const planetsData = [
   },
   {
     nombre: "Neptuno",
-    r: 0.6,
+    r: 2.8,
     dist: 260.0,
     vel: 0.05,
     col: 0xffffff,
@@ -245,24 +247,25 @@ function init() {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   document.body.appendChild(renderer.domElement);
-
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
 
   //Ver Planeta
-  const gui = new dat.GUI();
-  gui
-    .add(params, "planetaSeleccionado", planetNames)
-    .name("Planeta")
-    .onChange((value) => {
-      planetaSeguido =
-        value === "Sol"
-          ? estrella
-          : Planetas.find((p) => p.userData.nombre === value);
-    });
-  if (planetaSeguido) {
-    prevPlanetaPos.copy(planetaSeguido.position);
-  }
+  gui.add(params, "planetaSeleccionado", planetNames).onChange((value) => {
+    planetaSeguido =
+      value === "Sol"
+        ? estrella
+        : Planetas.find((p) => p.userData.nombre === value);
+
+    if (planetaSeguido && planetaSeguido !== estrella) {
+      mostrarEstadisticasPlaneta(planetaSeguido);
+    }
+  });
+
+  const naveFolder = gui.addFolder("Modo Nave");
+  naveFolder.add({ entrar: activarNave }, "entrar").name("Entrar en la nave");
+  naveFolder.add({ salir: salirNave }, "salir").name("Salir de la nave");
+  naveFolder.open();
 
   // Luz del sol puntutal
   const Lpunt = new THREE.PointLight(0xffffff, 1, 0, 2);
@@ -488,20 +491,21 @@ function animationLoop() {
     }
   }
 
-  controls.update();
+  if (naveActiva) {
+    moverNave();
+  } else {
+    controls.update();
+  }
   renderer.render(scene, camera);
 
   //Seguimiento de la camara
-  if (planetaSeguido) {
-    // Movimiento que ha realizado el planeta
+  if (!naveActiva && planetaSeguido) {
     const delta = new THREE.Vector3().subVectors(
       planetaSeguido.position,
       prevPlanetaPos
     );
-    // Luego muevo la camara lo que se ha desplazado el planeta
     camera.position.add(delta);
     controls.target.add(delta);
-
     prevPlanetaPos.copy(planetaSeguido.position);
   }
 }
@@ -513,7 +517,151 @@ function onWindowResize() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-//TODO:
-// Añadir anillo saturno
-// Mover la camara con una "nave"
-// Para darle efecto a la atmosfera utilizar "alpha" (script 13)
+// ----------- Nave -----------
+
+let naveActiva = false;
+let keysPressed = {};
+const moveSpeed = 2.0;
+let naveControls;
+
+function onKeyDown(e) {
+  keysPressed[e.code] = true;
+}
+function onKeyUp(e) {
+  keysPressed[e.code] = false;
+}
+
+function activarNave() {
+  if (naveActiva) return;
+  naveActiva = true;
+
+  controls.enabled = false;
+  planetaSeguido = null;
+  controls.target.copy(camera.position);
+  controls.update();
+
+  if (!naveControls) {
+    naveControls = new PointerLockControls(camera, renderer.domElement);
+    scene.add(naveControls.getObject());
+  }
+
+  naveControls.lock();
+
+  document.addEventListener("keydown", onKeyDown);
+  document.addEventListener("keyup", onKeyUp);
+}
+
+function salirNave() {
+  if (!naveActiva) return;
+  naveActiva = false;
+
+  document.removeEventListener("keydown", onKeyDown);
+  document.removeEventListener("keyup", onKeyUp);
+  keysPressed = {};
+
+  if (naveControls && naveControls.isLocked) naveControls.unlock();
+
+  params.planetaSeleccionado = "Sol";
+  planetaSeguido = estrella;
+  prevPlanetaPos.copy(estrella.position);
+  camera.position.set(0, -200, 120);
+  controls.target.set(0, 0, 0);
+  controls.enabled = true;
+  controls.update();
+}
+
+function moverNave() {
+  if (!naveActiva || !naveControls) return;
+
+  const object = naveControls.getObject();
+  const direction = new THREE.Vector3();
+  const right = new THREE.Vector3();
+  const up = new THREE.Vector3(0, 1, 0);
+
+  camera.getWorldDirection(direction);
+  direction.normalize();
+  right.crossVectors(direction, up).normalize();
+
+  const move = new THREE.Vector3();
+
+  if (keysPressed["KeyW"]) move.addScaledVector(direction, moveSpeed);
+  if (keysPressed["KeyS"]) move.addScaledVector(direction, -moveSpeed);
+  if (keysPressed["KeyA"]) move.addScaledVector(right, -moveSpeed);
+  if (keysPressed["KeyD"]) move.addScaledVector(right, moveSpeed);
+  if (keysPressed["KeyQ"]) move.y += moveSpeed; //Para subir
+  if (keysPressed["KeyE"]) move.y -= moveSpeed; //Para bajar
+
+  object.position.add(move);
+}
+
+// Interaccion con el sistema solar
+// Esta seccion hace que se pueda seleccionar un planeta simplemente haciendo click en el mismo
+// Resaltando el planeta elegido
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+window.addEventListener("click", onMouseClick, false);
+
+function onMouseClick(event) {
+  // Normalizar coordenadas del "mouse"
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+
+  // Detectar intersecciones con los planetas
+  const intersects = raycaster.intersectObjects(Planetas);
+
+  if (intersects.length > 0) {
+    // Tomamos el primer planeta intersectado
+    const planeta = intersects[0].object;
+    planetaSeguido = planeta; // Seleccionamos el planeta
+    console.log("Planeta seleccionado:", planeta.userData.nombre);
+    mostrarEstadisticasPlaneta(planeta);
+    resaltarPlaneta(planeta);
+  }
+}
+
+function resaltarPlaneta(planeta) {
+  Planetas.forEach((p) => p.material.emissive.set(0x000000));
+  planeta.material.emissive.set(0x4444ff);
+}
+
+// Modificar los datos de los planetas
+let planetaFolder = null;
+
+function mostrarEstadisticasPlaneta(planeta) {
+  if (planetaFolder) {
+    gui.removeFolder(planetaFolder);
+  }
+
+  planetaFolder = gui.addFolder(`Planeta: ${planeta.userData.nombre}`);
+
+  const data = planetsData.find((p) => p.nombre === planeta.userData.nombre);
+
+  if (!data) return;
+
+  // Datos modificables:
+  planetaFolder
+    .add(data, "dist", 10, 500)
+    .name("Distancia al sol")
+    .onChange((val) => {
+      planeta.userData.dist = val;
+    });
+  planetaFolder
+    .add(data, "vel", 0, 1)
+    .name("Velocidad orbital")
+    .onChange((val) => {
+      planeta.userData.speed = val;
+    });
+  planetaFolder
+    .add(data, "r", 0.1, 10)
+    .name("Radio")
+    .onChange((val) => {
+      planeta.scale.set(val, val, val);
+    });
+
+  planetaFolder.open();
+}
+
