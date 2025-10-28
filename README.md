@@ -1,30 +1,35 @@
 # Sistema Solar en Three.js
 
 Este proyecto simula el **Sistema Solar en 3D** utilizando **Three.js**, con texturas, rotaciones, órbitas elípticas, lunas, anillos y un fondo que intenta representar las estrellas del universo.  
-Incluye un panel interactivo (**dat.GUI**) para seleccionar el planeta que se desea seguir
+Incluye un panel interactivo (**dat.GUI**) para seleccionar o modificar los planetas y un **modo de navegación libre en primera persona**.
 
 ---
 
 ## Índice
 
-1. [Características principales](#características-principales)   
+1. [Características principales](#características-principales)  
 2. [Inicialización y configuración](#inicialización)  
 3. [Datos de los planetas](#datos-de-los-planetas)  
 4. [Funciones principales](#funciones-principales)  
-5. [Eventos y animación](#eventos-y-animación)
-6. [Imagenes y video](#imagenes-y-video) 
+5. [Modo Nave](#modo-nave)  
+6. [Editor de planetas](#editor-de-planetas)  
+7. [Eventos y animación](#eventos-y-animación)  
+8. [Imágenes y video](#imagenes-y-video)
 
 ---
 
 ## Características principales
 
 - Representación completa del **Sistema Solar** con órbitas elípticas e inclinaciones realistas.  
-- **Texturas HD** de planetas, lunas y fondo estelar (vía NASA).  
+- **Texturas** de planetas, lunas, anillos y fondo estelar (vía NASA).  
 - **Rotación** de planetas y lunas en tiempo real.  
-- **Luz puntual (Sol)** y **luz ambiental** para simular la iluminación natural.  
-- **Cámara interactiva** con `OrbitControls` pudiendo seleccionar diferentes planetas.  
-- **Panel de control (dat.GUI)** para elegir qué planeta seguir.  
-- **Fondo de estrellas** creado con una esfera y añadiendole el material con una foto 8k.
+- **Iluminación mixta:** luz puntual (Sol) + luz ambiental suave.  
+- **Cámara interactiva (OrbitControls)** con seguimiento de planetas.  
+- **Panel de control (dat.GUI)** para seleccionar o editar planetas.  
+- **Sombras suaves** activadas (`PCFSoftShadowMap`).  
+- **Modo Nave:** control libre en primera persona.  
+- **Selección por clic:** elegir y resaltar planetas directamente en la escena.  
+- **Panel dinámico de estadísticas** poder editar los planetas en tiempo real.
 
 ---
 
@@ -38,6 +43,7 @@ La función principal `init()`:
 - Añade el **fondo estelar** (textura de la Vía Láctea).  
 - Genera planetas y lunas a partir del arreglo `planetsData`.  
 - Configura el menú `dat.GUI` para seleccionar el planeta.
+- Crea un submenú para el **modo Nave**.
 
 ---
 
@@ -134,6 +140,90 @@ Esto crea un efecto de seguimiento suave y dinámico.
   - El seguimiento de planeta se logra calculando el desplazamiento entre frames y aplicándolo a la posición de la cámara y al objetivo de los controles.
   - 
 ---
+
+## Modo nave
+
+El **Modo Nave** permite moverse libremente por el espacio en primera persona.
+- Se activa desde el panel **dat.GUI**:
+  - “Modo Nave” → “Entrar en la nave”  
+  - “Salir de la nave” para volver al control normal, haciendo que se enfoque la vista hacia el sol. (IMPORTANTE) para salir del modo de nave se ha de hacer "escape" y luego elegir la opción "salir de la nave".  
+ 
+### Controles de la nave:
+  W: moverse hacia delante  
+  S: moverse hacia atrás  
+  A: moverse hacia la izquierda  
+  D: moverse hacia la derecha  
+  Q: moverse hacia arriba  
+  E: moverse hacia abajo
+
+### Implementación
+
+- Implementado con **PointerLockControls**.  
+- Desactiva `OrbitControls` al activarse.  
+- Se bloquea el cursor dentro del canvas mientras está activo.  
+- Permite explorar libremente el sistema solar sin seguir planetas.  
+- La posición de la cámara se actualiza en cada frame según las teclas presionadas y la orientación actual.
+
+### Funciones
+
+- `activarNave()`
+  - Activa el Modo Nave en primera persona.
+  - Desactiva `OrbitControls` y bloquea el cursor.
+  - Inicializa los controles de la nave (`PointerLockControls`) si aún no existen.
+  - Permite que la cámara se mueva libremente.
+
+- `salirNave()`
+  - Desactiva el Modo Nave y reactiva `OrbitControls`.
+  - Desbloquea el cursor.
+  - Centra la cámara nuevamente hacia el Sol.
+  - Resetea el estado de teclas presionadas.
+
+- `moverNave()`
+  - Se ejecuta en cada frame mientras el Modo Nave está activo.
+  - Calcula la dirección de movimiento según las teclas presionadas (`W`, `A`, `S`, `D`, `Q`, `E`).
+  - Combina dirección y altura para mover la cámara suavemente.
+  - Actualiza la posición del objeto de control de la nave (`naveControls.getObject()`).
+
+- `onKeyDown(e)` y `onKeyUp(e)`
+  - Detectan cuándo se presionan o sueltan las teclas de movimiento.
+  - Actualizan el objeto `keysPressed` para controlar el movimiento de la nave.
+ 
+## Editor de planetas
+
+El **Editor de planetas** permite modificar parámetros de los planetas en tiempo real desde la interfaz gráfica (`dat.GUI`).
+
+### Cómo se activa
+
+- Se activa automáticamente al seleccionar un planeta en la escena (por clic o desde la lista de dat.GUI).  
+- Al seleccionar un planeta, se crea un **submenú dinámico** en el panel dat.GUI con los parámetros editables.
+
+### Parámetros editables
+
+- `dist`: distancia del planeta al Sol.  
+- `vel`: velocidad orbital del planeta.  
+- `r`: radio del planeta.
+
+### Funcionalidad
+
+- Los cambios se aplican **inmediatamente en la escena**, modificando la órbita, posición y tamaño del planeta.  
+- Solo un planeta puede ser editado a la vez; al seleccionar otro, el menú anterior se cierra automáticamente.  
+- Permite experimentar con diferentes configuraciones de planetas y observar cómo afectan la simulación en tiempo real.  
+- La estrella no es modificable
+
+### Funciones importantes del Editor de planetas
+
+- `mostrarEstadisticasPlaneta(planeta)`
+  - Crea el submenú dinámico en dat.GUI para el planeta seleccionado.  
+  - Permite modificar `dist`, `vel` y `r` directamente desde el panel.  
+  - Actualiza los valores del planeta en la escena en tiempo real.
+
+- `resaltarPlaneta(planeta)`
+  - Resalta visualmente el planeta seleccionado en la escena.  
+  - Apaga el resaltado de cualquier otro planeta previamente seleccionado.
+
+- Interacción con eventos:
+  - La selección de un planeta se realiza mediante `Raycaster` en el evento `click`.
+
 
 ## Eventos y animación
 
