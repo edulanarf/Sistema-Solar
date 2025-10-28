@@ -267,7 +267,11 @@ El **Editor de planetas** permite modificar parámetros de los planetas en tiemp
 
 ![GUI](ImagenesReadme/SistemaSolar4.PNG)
 
-- Video: En el video se puede ver cada planeta del sistema solar, junto con la GUI para seleccionar la vista de cada planeta. También se pueden observar el dibjudo de cada órbita, viendo como cada una tiene una inclinación respecto al plano XY y un factor de elipticidad diferente
+### Video
+
+- En el video se puede ver cada planeta del sistema solar, junto con la GUI para seleccionar la vista de cada planeta.  
+- Cada planeta puede ser seleccionado haciendo click en el mismo o simplemente seleccionandolo mediante la gui. Una vez seleccionado el planeta, aparecerá una nueva gui donden editar varios parámetros de los planetas (La estrella no se puede editar).  
+- Por último, se puede ver la vista de nave. Esta simplemente nos permite movernos libremente por todo el sistema solar. 
 
 https://drive.google.com/file/d/1MD9Zjg4I7IR3MAolVDCewIcMSLQ-WgYV/view?usp=sharing
   
