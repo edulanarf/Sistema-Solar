@@ -167,3 +167,8 @@ Esto crea un efecto de seguimiento suave y dinámico.
 - GUI para seleccionar la vista de cada planeta
 
 ![Órbitas](ImagenesReadme/SistemaSolar3.PNG)
+
+- Video: En el video se puede ver cada planeta del sistema solar, junto con la GUI para seleccionar la vista de cada planeta. También se pueden observar el dibjudo de cada órbita, viendo como cada una tiene una inclinación respecto al plano XY y un factor de elipticidad diferente
+
+https://drive.google.com/file/d/1HrWfYGW6meOEvfbQafMVZL_iS0gP9GCd/view?usp=sharing
+  
