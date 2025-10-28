@@ -156,4 +156,14 @@ Esto crea un efecto de seguimiento suave y dinámico.
 
 ## Imagenes y video
 
+- Júpiter y algunas de sus lunas, con sombras (ambiente y puntual)
 
+![Júpiter](ImagenesReadme/SistemaSolar1.PNG)
+
+- Órbitas Elípticas con inclinación
+
+![Órbitas](ImagenesReadme/SistemaSolar2.PNG)
+
+- GUI para seleccionar la vista de cada planeta
+
+![Órbitas](ImagenesReadme/SistemaSolar3.PNG)
