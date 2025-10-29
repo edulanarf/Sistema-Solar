@@ -90,7 +90,7 @@ const planetsData = [
         inclinacionX: 0.05,
         inclinacionZ: 0.1,
         angleOffset: Math.PI / 2, //Añado un angulo para especificar desde donde empieza a girar
-        dist: 1.57,
+        dist: 3.57,
         vel: 1.2,
         col: 0xffffff,
         texture: texturaLunaTierra,
